@@ -1,13 +1,18 @@
-from xmlrpc.client import SimpleXMLRPCServer
+from xmlrpc.server import SimpleXMLRPCServer
+import xmlrpc.client
 import datetime
+import xmlrpc.server
+
+port = 8000
 
 lista_rooms =[]
 class Sala_de_chat:
-    def __init__(self):
+    def __init__(self,binder_address):
         self.name = ""
         self.users = []
         self.rooms = []
         self.users = {}
+        self.binder = xmlrpc.client.ServerProxy(binder_address)
         self.mensagem = []
     def set_name(self, room_name):
         self.set_name = room_name
@@ -43,6 +48,25 @@ class Sala_gerente:
         selecionar = self.rooms[room_name]
         return selecionar.users.values()
 
+    def send_message(self,username, room_name, message, recipient=None):
+        if(recipient == None):
+            tipo = "Broadcast"
+        msg = {
+            "conteudo": message,
+            "tipo": tipo,
+            "origem": username,
+            "destino": room_name,
+            "timestamp":  datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            }
+        sala = self.rooms[room_name]
+        sala.mensagem.append(msg)
+        return "Mensagem enviada"
+
+    def receive_messages(self,username, room_name):
+        sala = self.rooms[room_name]
+        if(len(sala.mensagem))
+
+    
         
 
 # class Mensagem:
@@ -59,20 +83,11 @@ class Sala_gerente:
 
 
 
-def send_message(username, room_name, message, recipient=None):
-    if(recipient == None):
-        tipo = "Broadcast"
-    msg = {"conteudo": message,
-           "tipo": tipo,
-           "origem": username,
-           "destino": room_name,
-            "timestamp":  datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-           }
-    Sala_de_chat()
+
+    
 
 
-def receive_messages(username, room_name):
-    pass
+
 
 def list_rooms():
     pass
@@ -85,8 +100,13 @@ def list_rooms():
 if __name__ == "__main__":
     manager = Sala_gerente()
     
-    rpc_server = SimpleXMLRPCServer(('localhost', 8000))
+    # rpc_server = SimpleXMLRPCServer(('localhost', 8000))
+    rpc_server = xmlrpc.server.SimpleXMLRPCServer(('localhost', port))
+    rpc_server.re
     rpc_server.register_instance(Sala_gerente)
     rpc_server.register_instance(Sala_de_chat)
     print("Chat server running on port 8000...")
+    binder = xmlrpc.client.ServerProxy('http://localhost:5000')
+    
+
     rpc_server.serve_forever()

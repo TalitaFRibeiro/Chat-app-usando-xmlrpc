@@ -1,4 +1,4 @@
-from xmlrpc.server import SimpleXMLRPCServer
+import xmlrpc.server
 porta=5000
 
 #Dicionário
@@ -20,11 +20,12 @@ class Binder:
 if __name__ == "__main__":
     binder= Binder()
     # Criar servidor xml-rpc
-    binder_server = SimpleXMLRPCServer(('localhost',porta))
+    binder_server = xmlrpc.server.SimpleXMLRPCServer(('localhost',porta))
     print("Binder pronto e aguardando registros")
 
     #Registra funções
-    binder_server.register_instance(binder)
+    binder_server.register_instance(Binder())
+    binder.procedure_registry
     #binder_server.register_function(register_procedure, "register_procedure")
     #binder_server.register_function(lookup_procedure,"lookup_procedure")
 
