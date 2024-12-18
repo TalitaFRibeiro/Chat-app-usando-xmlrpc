@@ -1,4 +1,5 @@
 import xmlrpc.server
+import xmlrpc.client
 porta=5000
 
 #Dicionário
@@ -18,7 +19,8 @@ class Binder:
     #     self.procedure_registry[instance_name] = [port,address]
     #     print(f" {instance_name} registrada na porta {port} e no endereço {address}")
     #     return True
-        
+    def show_procedures(self):
+        return list(self.procedure_registry)
 
     def lookup_procedure(self,procedure_name):
         return self.procedure_registry.get(procedure_name)
@@ -36,8 +38,9 @@ if __name__ == "__main__":
 
     cliente_server.register_procedure("register_procedure", address, porta)
     cliente_server.register_procedure("lookup_procedure", address, porta)
+    cliente_server.register_procedure("show_procedures", address, porta)
 
     #binder_server.register_function(register_procedure, "register_procedure")
     #binder_server.register_function(lookup_procedure,"lookup_procedure")
-
+    print(binder.show_procedures())
     binder.serve_forever()

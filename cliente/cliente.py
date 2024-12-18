@@ -4,10 +4,10 @@ import xmlrpc.client
 import xmlrpc.server
 import sys
 import time 
-port = 5431
+port = 5430
 
 class Cliente:
-    def __init__(self):
+    def __init__(self,username):
         self.username = ""
         self.mensagem = []
         self.tamanho_vetor_mensagem = 0
@@ -55,15 +55,20 @@ def recebe_mensagem(server, username, room_name, interval=2):
 
 if __name__ == "__main__":
 
-    cliente_server = xmlrpc.server.SimpleXMLRPCServer(('localhost', port))
-    print(f"Cliente pronto e aguardando registros na porta {port}")
+
+    print("primeiro")
+
+    binder = xmlrpc.client.ServerProxy('http://localhost:5000')
+    print(f'Metodos disponiveis: {binder.show_procedures()} \t\n')
+
+
+
+    # def criar_username():
+    #     username = input("Digite o seu username: ")
+    #     clientee = Cliente(username)
+
+
     
-   
-    cliente_server.register_instance(Cliente())
-
-    binder = xmlrpc.client.ServerProxy(f'http://localhost:5000')
-    print(f'Metodos disponiveis: {binder.system.listMethods()} \t\n')
-
     
 
     
