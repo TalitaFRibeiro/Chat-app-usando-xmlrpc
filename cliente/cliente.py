@@ -105,9 +105,9 @@ if __name__ == "__main__":
             room_name = salas[int(escolha)-1].name
         if(server.criar_sala(room_name) == "Sala ja existe"):
             server.entrar_sala(username, room_name)
-        else:
-            server.criar_sala(room_name)
-            server.entrar_sala(username, room_name)
+        # else:
+        #     server.criar_sala(room_name)
+        #     server.entrar_sala(username, room_name)
 
     elif(opcao == 2): # Sair sala
         if(server.esta_em_alguma_sala(username)):
@@ -116,13 +116,56 @@ if __name__ == "__main__":
             print("Usuário nao esta em nenhuma sala")
     
     elif(opcao == 3): # Enviar mensagem
+        try:
+            room_name = input("Digite o nome da sala: ")
+            if(server.esta_em_sala(username, room_name)==False):
+                
+                raise Exception("Usuário nao esta na sala")
+            
+            message = input("Digite a mensagem: ")
+            privada = input("Mensagem privada? (S/N): ")
+            if(privada == "S" or privada == "s"):    
+                recipient = input("Digite o username do destinatário: ")   
+                if(server.username_esta_em_sala(recipient, room_name)==False):
+                    raise Exception("Destinatário nao esta na sala")
+                server.enviar_mensagem(username, room_name, message, recipient)
+            else:
+                user_list = server.listar_usuarios(room_name)
+
+                server.enviar_mensagem(username, room_name, message)
+
+        except Exception as e:
+            print(f"Erro ao enviar mensagem: {e}")
 
     elif(opcao == 4): # Listar usuários
+        try:
+            room_name = input("Digite o nome da sala: ")
+            if(server.esta_em_sala(username, room_name)==False):
+                raise Exception("Usuário nao esta na sala")
+            server.listar_usuarios(room_name)
+        except Exception as e:
+            print(f"Erro ao listar usuários: {e}")
 
     # elif(opcao == 5): # era receber mensagens
     elif(opcao == 5): # Listar sala
+        try:
+            room_name = input("Digite o nome da sala: ")
+            if(server.esta_em_sala(username, room_name)==False):
+                raise Exception("Usuário nao esta na sala")
+            server.listar_sala(room_name)
+        except Exception as e:
+            print(f"Erro ao listar sala: {e}")
 
     elif(opcao == 6): # Criar sala
+        try:
+            room_name = input("Digite o nome da sala: ")
+            server.listar_sala(room_name)
+            if(room_name in server.achar_sala(room_name)):
+                raise Exception("Sala ja existe")
+            server.criar_sala(room_name)
+        except Exception as e:
+            print(f"Erro ao criar sala: {e}")
+
 
     # Chama a funcao para receber mensagens
     #recebe_mensagem(server, "Usuario", "Sala_de_chat", 2)

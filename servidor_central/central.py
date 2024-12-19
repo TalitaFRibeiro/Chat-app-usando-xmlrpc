@@ -122,6 +122,7 @@ class Sala_gerente:
             sala = self.rooms[i]
             if sala.name == room_name:
                 return sala
+        return None
         
 
     def listar_usuarios(self,room_name):
@@ -160,10 +161,17 @@ class Sala_gerente:
     def username_existe(self,username):
         for i in self.rooms:
             sala = self.rooms[i]
-            if username in sala.users:
-                return True
+            for i in sala.users:
+                if i.username == username:
+                    return True
         return False
 
+    def username_esta_em_sala(self,username,room_name):
+        sala = self.rooms[room_name]
+        for i in sala.users:
+            if i.username == username:
+                return True
+        return False
 
         
 
