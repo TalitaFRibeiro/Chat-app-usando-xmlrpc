@@ -12,7 +12,7 @@ class Binder:
 
     def register_procedure(self,procedure_name, address, port):
         self.procedure_registry[procedure_name] = [port,address]
-        print(f"Procedimento {procedure_name} registrado na porta {port} e no endereço {address}")
+        print(f'Procedimento {procedure_name} registrado na porta {port} e no endereço {address}')
         return True
     
     # def register__instance(self,instance_name, address,port):
@@ -27,20 +27,12 @@ class Binder:
 
 if __name__ == "__main__":
     binder= Binder()
-    # Criar servidor xml-rpc
-    # binder_server = xmlrpc.server.SimpleXMLRPCServer(('localhost',porta))
-    print("Binder pronto e aguardando registros na porta 5000")
+    #binder.register_procedure("Registrar procedimento", address, porta)
+    #binder.register_procedure("Chamar procedimento", address, porta)
+    #binder.register_procedure("Mostrar procedimentos", address, porta)
 
     #Registra funções
-    binder = xmlrpc.server.SimpleXMLRPCServer(('localhost',porta))
-    binder.register_instance(Binder())
-    cliente_server = xmlrpc.client.ServerProxy(f'http://{address}:{porta}')
-
-    cliente_server.register_procedure("register_procedure", address, porta)
-    cliente_server.register_procedure("lookup_procedure", address, porta)
-    cliente_server.register_procedure("show_procedures", address, porta)
-
-    #binder_server.register_function(register_procedure, "register_procedure")
-    #binder_server.register_function(lookup_procedure,"lookup_procedure")
-    print(binder.show_procedures())
-    binder.serve_forever()
+    binder_server = xmlrpc.server.SimpleXMLRPCServer(('localhost',porta))
+    binder_server.register_instance(binder)
+    print("Binder pronto e aguardando registros na porta 5000")
+    binder_server.serve_forever()

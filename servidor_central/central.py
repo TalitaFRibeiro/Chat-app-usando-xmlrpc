@@ -15,14 +15,16 @@ class Sala_de_chat:
         self.mensagem = []
 
     def adicionar_mensagem(self, username, room_name, message, tipo):
-        msg = {
-            "conteudo": message,
-            "tipo": tipo,
-            "origem": username,
-            "destino": room_name,
-            "timestamp":  datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }
-        self.mensagem.append(msg)
+        # msg = {
+        #     "conteudo": message,
+        #     "tipo": tipo,
+        #     "origem": username,
+        #     "destino": room_name,
+        #     "timestamp":  datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # }
+        if(tipo == "Broadcast"):
+            self.mensagem.append(msg)
+        
 
     def get_last_fifty(self):
         mensagens_fif = self.mensagem[-50:]
@@ -40,6 +42,7 @@ class Sala_gerente:
         self.rooms = {}
         self.empty_rooms = 0
         self.next_port = 8002 
+        self.users=[]
 
     
     # def create_room(self,room_name):
@@ -71,15 +74,33 @@ class Sala_gerente:
     def listar_salas(self):
         return list(self.rooms)
     
+    def esta_em_alguma_sala(self,username):
+        for i in self.rooms:
+            sala = self.rooms[i]
+            if username in sala.users.username:
+                return True
+        return False
+    
     def entrar_sala(self,username,room_name):
-        room = self.rooms[room_name]
+        room = self.rooms[room_name] # selecionar a sala
         if username in room.users:
             return "Usuário já está na sala"
-        print(f"Usuário {username} foi adicionado a sala {room_name} ")
-        mensagens = room.get_last_fifty(self)
-        lista_usuarios = room.users
-        self.send_message(username,room_name,f"{username} entrou na sala {room_name}")
-        return mensagens,lista_usuarios
+        else:
+            room.users.append(username) #adicionar o usuário na sala
+            print(f"Usuário {username} foi adicionado a sala {room_name} ")
+            mensagens = room.get_last_fifty()
+            self.enviar_mensagem(username,room_name,f"{username} entrou na sala {room_name}")
+        return mensagens
+        
+    def criar_username(self,username):
+        for i in self.users:
+            user_temp = self.users[i]
+            if username in user_temp.username:
+                return "Usuário ja cadastrado"
+        
+        user = Cliente(username)
+        self.users.append(user)
+        return "Usuário cadastrado com sucesso"
         
         
 
@@ -87,12 +108,40 @@ class Sala_gerente:
         selecionar = self.rooms[room_name]
         return list(selecionar.users)
 
-    def enviar_mensagem(self,username, room_name, message, recipient=None):
+    def enviar_mensagem(self,username, room_name, message, recipient=None): #username da pessoa q enviou a msg
+        
         if(recipient == None):
             tipo = "Broadcast"
-        self.rooms[room_name].adicionar_mensagem(username,room_name,message,tipo)
+            msg = {
+            "conteudo": message,
+            "tipo": tipo,
+            "origem": username,
+            "destino": room_name,
+            "timestamp":  datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            }
+            
+            self.rooms[room_name].adicionar_mensagem(username,room_name,message)
+            for pessoa in self.rooms[room_name].users:
+                pessoa.receber_mensagem_privada(username,room_name,msg)
+        else:
+            tipo = "Unicast"
+            msg = {
+            "conteudo": message,
+            "tipo": tipo,
+            "origem": username,
+            "destino": room_name,
+            "timestamp":  datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            }
+            for usuario in self.users:
+                if(usuario.username == recipient):
+                    usuario.receber_mensagem_privada(username,room_name,msg)
 
-    
+    def username_existe(self,username):
+        for i in self.rooms:
+            sala = self.rooms[i]
+            if username in sala.users:
+                return True
+        return False
 
 
         
@@ -106,7 +155,18 @@ class Sala_gerente:
         return sala.mensagem
         
 
+
+
+class Cliente:
+    def __init__(self,username):
+        self.username = username
+        self.mensagem = []
+        self.tamanho_vetor_mensagem = 0
     
+    def receber_mensagem_privada(self,username, room_name, message):
+        self.mensagem.append(message)    
+
+         
         
 
 # class Mensagem:
@@ -132,6 +192,7 @@ class Sala_gerente:
 #     pass  
 
 if __name__ == "__main__":
+    cliente = Cliente("test")
     manager = Sala_gerente()
     sala_modelo = Sala_de_chat("teste")
     
@@ -140,19 +201,21 @@ if __name__ == "__main__":
     #rpc_server.register_introspection_functions()
  #   rpc_server.register_function(sala_modelo.adicionar_mensagem,"adiciona_mensagem") #Pra poder registrar o método de "Sala_de_chat"
     rpc_server.register_function(sala_modelo.sair_sala,"sair_sala")
+    rpc_server.register_function(cliente.receber_mensagem_privada,"receber_mensagem_privada")
 #    rpc_server.register_function(sala_modelo.get_last_fifty,"ultimos_cinquenta")
     rpc_server.register_instance(Sala_gerente())
     # rpc_server.register_instance(Sala_de_chat())
     print("Chat server running on port 8000...")
     rpc_client = xmlrpc.client.ServerProxy('http://localhost:5000')
-    rpc_client.register_procedure('adicionar_mensagem','localhost',port)
-    rpc_client.register_procedure('entrar_sala','localhost',port)
-    rpc_client.register_procedure('sair_sala','localhost',port)
-    rpc_client.register_procedure('enviar_mensagem','localhost',port)
-    rpc_client.register_procedure('listar_usuarios','localhost',port)
-    rpc_client.register_procedure('receber_mensagens','localhost',port)
-    rpc_client.register_procedure('listar_salas','localhost',port)
-    rpc_client.register_procedure('criar_sala','localhost',port)
+    # rpc_client.register_procedure('adicionar mensagem','localhost',port)
+    rpc_client.register_procedure('Entrar na sala','localhost',port)
+    rpc_client.register_procedure('Sair da sala','localhost',port)
+    rpc_client.register_procedure('Enviar mensagem','localhost',port)
+    rpc_client.register_procedure('Listar usuários','localhost',port)
+    rpc_client.register_procedure('Receber mensagens','localhost',port)
+    rpc_client.register_procedure('Listar salas','localhost',port)
+    rpc_client.register_procedure('Criar sala','localhost',port)
+    rpc_client.register_procedure('Criar username','localhost',port)
 
 
     rpc_server.serve_forever()

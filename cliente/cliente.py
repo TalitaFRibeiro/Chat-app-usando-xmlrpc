@@ -6,19 +6,7 @@ import sys
 import time 
 port = 5430
 
-class Cliente:
-    def __init__(self,username):
-        self.username = ""
-        self.mensagem = []
-        self.tamanho_vetor_mensagem = 0
-    
-    def recebe_mensagem(self,room,msg_arr):
-        for msg in msg_arr:
-            self.mensagem.append(msg)
-            print(f"({msg['tipo']}) {msg['username']} às {msg['timestamp']}:  {msg['texto']}")
-        
 
-        
         
 
 # Função para realizar as operações de cálculo
@@ -38,7 +26,7 @@ def recebe_mensagem(server, username, room_name, interval=2):
             try:
 
                 # Chama o método remoto para receber mensagens
-                new_messages = server.receber_mensagens(username, room_name)
+                new_messages = server.receber_mensagem_privada(username, room_name)
 
                 # Exibe as mensagens recebidas
                 for message in new_messages:
@@ -59,7 +47,44 @@ if __name__ == "__main__":
     print("primeiro")
 
     binder = xmlrpc.client.ServerProxy('http://localhost:5000')
-    print(f'Metodos disponiveis: {binder.show_procedures()} \t\n')
+    lista_procedimentos = binder.show_procedures()
+    print("Escolha uma opção no menu:")
+    for i in range(len(lista_procedimentos)):
+        
+        print(f"{i+1} - {lista_procedimentos[i]}")
+    
+    opcao = int(input("Digite o número da opção desejada: ")) - 1
+    procedure_name = lista_procedimentos[opcao]
+    procedure_port, procedure_address = binder.lookup_procedure(procedure_name)
+    print(f"Procedimento {procedure_name} registrado na porta {procedure_port} e no endereço {procedure_address}")
+    server = xmlrpc.client.ServerProxy(f'http://{procedure_address}:{procedure_port}')
+
+    if server is None:
+        print("Oh no!")
+        exit(1)
+    
+    username = input("Digite o seu username: ")
+    print(server.username_existe(username))
+    try:
+        if server.criar_username(username):
+            print(f"Username '{username}' registrado com sucesso!")
+        else:
+            print(f"Username '{username}' já está em uso.")
+            exit(1)
+    except Exception as e:
+        print(f"Erro ao criar username: {e}")
+        exit(1)
+    if(server.criar_sala("Sala teste")=="Sala ja existe"):
+        print("Sala ja existe")
+
+    for sala in range(len(server.listar_salas())):    
+        print(sala)
+    print(f"Salas:{server.listar_salas()}\n")
+    server.entrar_sala(username, "Sala teste")
+    print(server.listar_usuarios("Sala teste"))
+
+    # Chama a funcao para receber mensagens
+    #recebe_mensagem(server, "Usuario", "Sala_de_chat", 2)
 
 
 
