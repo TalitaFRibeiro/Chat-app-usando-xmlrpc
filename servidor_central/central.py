@@ -53,13 +53,15 @@ class Sala_gerente:
 
     def criar_sala(self, room_name):
         """Cria uma nova sala e inicia um servidor XML-RPC para ela."""
-        if room_name in self.rooms:
-            return "Sala já existe."
+        for i in self.rooms:
+            sala = self.rooms[i]
+            if sala.name == room_name:
+                return "Sala ja existe"
 
         # Cria uma nova sala
         new_room = Sala_de_chat(room_name)
         self.rooms[room_name] = new_room
-        return f'Sala {room_name} criada!'
+        return f'Sala {new_room.name} criada!'
         
     # def criar_usuario(self,username,porta):
     #     usuario = xmlrpc.client.ServerProxy('http://localhost:{porta}')
@@ -87,7 +89,11 @@ class Sala_gerente:
     def entrar_sala(self,username,room_name):
         if(room_name in self.rooms == False):
             return "Sala não existe."
-        room = self.rooms[room_name] # selecionar a sala
+        for i in self.rooms:
+            sala = self.rooms[i]
+            if sala.name == room_name:
+                room = sala
+        
         user=self.find_user(username)
         if(user == False):
             return "Usuário nao existe"
@@ -123,7 +129,15 @@ class Sala_gerente:
             if sala.name == room_name:
                 return sala
         return None
-        
+    
+    def deletar_sala(self,room_name):
+        for i in self.rooms:
+            sala = self.rooms[i]
+            if sala.name == room_name:
+                self.rooms.pop(room_name)
+                del sala
+                return "Sala deletada com sucesso"
+        return "Sala nao encontrada"
 
     def listar_usuarios(self,room_name):
         selecionar = self.rooms[room_name]
@@ -247,7 +261,7 @@ if __name__ == "__main__":
     #rpc_client.register_procedure('Receber mensagens','localhost',port)
     rpc_client.register_procedure('Listar salas','localhost',port)
     rpc_client.register_procedure('Criar sala','localhost',port)
-    #rpc_client.register_procedure('Criar username','localhost',port)
+    rpc_client.register_procedure('Deletar sala','localhost',port)
 
 
     rpc_server.serve_forever()
