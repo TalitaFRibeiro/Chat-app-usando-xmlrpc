@@ -14,16 +14,16 @@ class Sala_de_chat:
         self.users = []
         self.mensagem = []
 
-    def adicionar_mensagem(self, username, room_name, message, tipo):
-        # msg = {
-        #     "conteudo": message,
-        #     "tipo": tipo,
-        #     "origem": username,
-        #     "destino": room_name,
-        #     "timestamp":  datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        # }
-        if(tipo == "Broadcast"):
-            self.mensagem.append(msg)
+    # def adicionar_mensagem(self, username, room_name, message, tipo):
+    #     # msg = {
+    #     #     "conteudo": message,
+    #     #     "tipo": tipo,
+    #     #     "origem": username,
+    #     #     "destino": room_name,
+    #     #     "timestamp":  datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    #     # }
+    #     if(tipo == "Broadcast"):
+    #         self.mensagem.append(msg)
         
 
     def get_last_fifty(self):
