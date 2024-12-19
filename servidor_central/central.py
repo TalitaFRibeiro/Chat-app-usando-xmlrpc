@@ -1,6 +1,6 @@
 from xmlrpc.server import SimpleXMLRPCServer
 import xmlrpc.client
-import datetime
+from datetime import datetime
 import xmlrpc.server
 
 port = 8000
@@ -77,21 +77,36 @@ class Sala_gerente:
     def esta_em_alguma_sala(self,username):
         for i in self.rooms:
             sala = self.rooms[i]
-            if username in sala.users.username:
-                return True
+            for i in sala.users:
+                if i.username == username:
+                    return True
         return False
     
+
+
     def entrar_sala(self,username,room_name):
+        if(room_name in self.rooms == False):
+            return "Sala não existe."
         room = self.rooms[room_name] # selecionar a sala
-        if username in room.users:
-            return "Usuário já está na sala"
+        user=self.find_user(username)
+        if(user == False):
+            return "Usuário nao existe"
         else:
-            room.users.append(username) #adicionar o usuário na sala
-            print(f"Usuário {username} foi adicionado a sala {room_name} ")
+            
+            room.users.append(user) #adicionar o usuário na sala
+            print(f"Usuário {user.username} foi adicionado a sala {room_name} ")
             mensagens = room.get_last_fifty()
-            self.enviar_mensagem(username,room_name,f"{username} entrou na sala {room_name}")
-        return mensagens
+            for pessoa in room.users:
+                pessoa.enviar_mensagem_privada(username,room_name,f"{username} entrou na sala {room_name}")
+            user.enviar_mensagem(username,room_name,mensagens, username)
         
+        
+    def find_user(self,username):
+        for i in self.users:
+            user_temp = self.users[i]
+            if username in user_temp.username:
+                return user_temp
+        return False
     def criar_username(self,username):
         for i in self.users:
             user_temp = self.users[i]
@@ -102,6 +117,11 @@ class Sala_gerente:
         self.users.append(user)
         return "Usuário cadastrado com sucesso"
         
+    def achar_sala(self,room_name):
+        for i in self.rooms:
+            sala = self.rooms[i]
+            if sala.name == room_name:
+                return sala
         
 
     def listar_usuarios(self,room_name):
@@ -116,12 +136,12 @@ class Sala_gerente:
             "conteudo": message,
             "tipo": tipo,
             "origem": username,
-            "destino": room_name,
-            "timestamp":  datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            "destino": room_name, #todos os usuários da sala
+            "timestamp":  datetime.now().strftime("%d-%m-%Y- %H:%M:%S")
             }
-            
-            self.rooms[room_name].adicionar_mensagem(username,room_name,message)
-            for pessoa in self.rooms[room_name].users:
+            sala = self.achar_sala(room_name)
+            sala.adicionar_mensagem(username,room_name,message)
+            for pessoa in sala.users:
                 pessoa.receber_mensagem_privada(username,room_name,msg)
         else:
             tipo = "Unicast"
@@ -129,8 +149,9 @@ class Sala_gerente:
             "conteudo": message,
             "tipo": tipo,
             "origem": username,
-            "destino": room_name,
-            "timestamp":  datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            "sala": room_name,
+            "destino": recipient,
+            "timestamp":  datetime.now().strftime("%d-%m-%Y- %H:%M:%S")
             }
             for usuario in self.users:
                 if(usuario.username == recipient):
@@ -146,13 +167,13 @@ class Sala_gerente:
 
         
 
-    def receber_mensagens(self,username, room_name):
-        if username not in self.rooms[room_name].users:
-            return "Usuário não está na sala."
+    # def receber_mensagens(self,username, room_name):
+    #     if username not in self.rooms[room_name].users:
+    #         return "Usuário não está na sala."
         
-        sala = self.rooms[room_name]
-        # return [msg for msg in sala.mensagem if msg["timestamp"] > timestamp]
-        return sala.mensagem
+    #     sala = self.rooms[room_name]
+    #     # return [msg for msg in sala.mensagem if msg["timestamp"] > timestamp]
+    #     return sala.mensagem
         
 
 
@@ -161,10 +182,13 @@ class Cliente:
     def __init__(self,username):
         self.username = username
         self.mensagem = []
+        self.origem_sala = ""
+
         self.tamanho_vetor_mensagem = 0
     
     def receber_mensagem_privada(self,username, room_name, message):
-        self.mensagem.append(message)    
+        self.mensagem.append(message)  
+        self.origem_sala = room_name
 
          
         
@@ -212,10 +236,10 @@ if __name__ == "__main__":
     rpc_client.register_procedure('Sair da sala','localhost',port)
     rpc_client.register_procedure('Enviar mensagem','localhost',port)
     rpc_client.register_procedure('Listar usuários','localhost',port)
-    rpc_client.register_procedure('Receber mensagens','localhost',port)
+    #rpc_client.register_procedure('Receber mensagens','localhost',port)
     rpc_client.register_procedure('Listar salas','localhost',port)
     rpc_client.register_procedure('Criar sala','localhost',port)
-    rpc_client.register_procedure('Criar username','localhost',port)
+    #rpc_client.register_procedure('Criar username','localhost',port)
 
 
     rpc_server.serve_forever()

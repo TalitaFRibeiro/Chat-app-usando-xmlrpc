@@ -19,17 +19,19 @@ port = 5430
 #     print(f"Multiplicação: {calc_server.multiplicacao(a, b)}")
 #     print(f"Divisão: {calc_server.divisao(a, b)}")
 
-
+vetor_mensagem=[]
 def recebe_mensagem(server, username, room_name, interval=2):
     def fetch_messages():
         while True:
             try:
-
+                usuario = server.find_user(username)
+                new_messages = usuario.mensagem
+                novas_mensagens = [x for x in vetor_mensagem if x not in new_messages]
                 # Chama o método remoto para receber mensagens
-                new_messages = server.receber_mensagem_privada(username, room_name)
+                
 
                 # Exibe as mensagens recebidas
-                for message in new_messages:
+                for message in novas_mensagens:
                     print(f"[{message['timestamp']}] {message['origem']}: {message['conteudo']}")
             except Exception as e:
                 print(f"Erro ao buscar mensagens: {e}")
@@ -41,6 +43,11 @@ def recebe_mensagem(server, username, room_name, interval=2):
     thread = threading.Thread(target=fetch_messages, daemon=True)
     thread.start()
 
+def mostrar_opcoes(lista_procedimentos):
+    print("Escolha uma opção no menu:")
+    for i in range(len(lista_procedimentos)):
+        print(f"{i+1} - {lista_procedimentos[i]}")
+
 if __name__ == "__main__":
 
 
@@ -48,6 +55,7 @@ if __name__ == "__main__":
 
     binder = xmlrpc.client.ServerProxy('http://localhost:5000')
     lista_procedimentos = binder.show_procedures()
+    
     print("Escolha uma opção no menu:")
     for i in range(len(lista_procedimentos)):
         
@@ -74,14 +82,47 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Erro ao criar username: {e}")
         exit(1)
-    if(server.criar_sala("Sala teste")=="Sala ja existe"):
-        print("Sala ja existe")
+    mostrar_opcoes(lista_procedimentos)
+    # if(server.criar_sala("Sala teste")=="Sala ja existe"):
+    #     print("Sala ja existe")
 
-    for sala in range(len(server.listar_salas())):    
-        print(sala)
-    print(f"Salas:{server.listar_salas()}\n")
-    server.entrar_sala(username, "Sala teste")
-    print(server.listar_usuarios("Sala teste"))
+    # for sala in range(len(server.listar_salas())):    
+    #     print(sala)
+    # print(f"Salas:{server.listar_salas()}\n")
+    # server.entrar_sala(username, "Sala teste")
+
+ 
+
+    if(opcao == 1): # Entrar na sala
+        print("Salas:")
+        salas = server.listar_salas()
+        if(len(salas) == 0):
+            print("Nenhuma sala criada")
+        for i in range(len(salas)): 
+            print(f"{i+1} - {salas[i]}")
+        escolha = input("Digite a escolha da sala: ")
+        if(escolha <= len(salas) and escolha > 0 and escolha <= len(salas)):
+            room_name = salas[int(escolha)-1].name
+        if(server.criar_sala(room_name) == "Sala ja existe"):
+            server.entrar_sala(username, room_name)
+        else:
+            server.criar_sala(room_name)
+            server.entrar_sala(username, room_name)
+
+    elif(opcao == 2): # Sair sala
+        if(server.esta_em_alguma_sala(username)):
+            server.sair_sala(username)
+        else:
+            print("Usuário nao esta em nenhuma sala")
+    
+    elif(opcao == 3): # Enviar mensagem
+
+    elif(opcao == 4): # Listar usuários
+
+    # elif(opcao == 5): # era receber mensagens
+    elif(opcao == 5): # Listar sala
+
+    elif(opcao == 6): # Criar sala
 
     # Chama a funcao para receber mensagens
     #recebe_mensagem(server, "Usuario", "Sala_de_chat", 2)
