@@ -14,16 +14,7 @@ class Sala_de_chat:
         self.users = []
         self.mensagem = []
 
-    # def adicionar_mensagem(self, username, room_name, message, tipo):
-    #     # msg = {
-    #     #     "conteudo": message,
-    #     #     "tipo": tipo,
-    #     #     "origem": username,
-    #     #     "destino": room_name,
-    #     #     "timestamp":  datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    #     # }
-    #     if(tipo == "Broadcast"):
-    #         self.mensagem.append(msg)
+
         
 
     def get_last_fifty(self):
@@ -39,17 +30,13 @@ class Sala_de_chat:
 class Sala_gerente:
     def __init__(self):
         self.total_rooms = 0
-        self.rooms = {}
+        self.rooms = []
         self.empty_rooms = 0
         self.next_port = 8002 
         self.users=[]
 
     
-    # def create_room(self,room_name):
-    #     sala = Sala_de_chat()
-    #     sala.set_name(room_name)
-    #     self.total_rooms += 1
-    #     self.rooms[room_name] = sala
+
 
     def criar_sala(self, room_name):
         """Cria uma nova sala e inicia um servidor XML-RPC para ela."""
@@ -63,18 +50,14 @@ class Sala_gerente:
         self.rooms[room_name] = new_room
         return f'Sala {new_room.name} criada!'
         
-    # def criar_usuario(self,username,porta):
-    #     usuario = xmlrpc.client.ServerProxy('http://localhost:{porta}')
-    #     usuario.username = username
-       
-
-#        # Registra a sala no Binder
-#        binder.register_procedure(room_name, "localhost", room_port)
-#        return f"Sala '{room_name}' criada na porta {room_port}."
     
 
     def listar_salas(self):
-        return list(self.rooms)
+        lista = []
+        for i in self.rooms:
+            sala = self.rooms[i]
+            lista.append(sala.name)
+        return lista
     
     def esta_em_alguma_sala(self,username):
         for i in self.rooms:
@@ -108,15 +91,14 @@ class Sala_gerente:
         
         
     def find_user(self,username):
-        for i in self.users:
-            user_temp = self.users[i]
-            if username in user_temp.username:
-                return user_temp
+        for user in self.users:
+            if username in user.username:
+                return user
         return False
+    
     def criar_username(self,username):
-        for i in self.users:
-            user_temp = self.users[i]
-            if username in user_temp.username:
+        for user in self.users:
+            if username in user.username:
                 return "Usuário ja cadastrado"
         
         user = Cliente(username)
@@ -180,7 +162,7 @@ class Sala_gerente:
                     return True
         return False
 
-    def username_esta_em_sala(self,username,room_name):
+    def esta_em_sala(self,username,room_name):
         sala = self.rooms[room_name]
         for i in sala.users:
             if i.username == username:
@@ -189,13 +171,7 @@ class Sala_gerente:
 
         
 
-    # def receber_mensagens(self,username, room_name):
-    #     if username not in self.rooms[room_name].users:
-    #         return "Usuário não está na sala."
-        
-    #     sala = self.rooms[room_name]
-    #     # return [msg for msg in sala.mensagem if msg["timestamp"] > timestamp]
-    #     return sala.mensagem
+ 
         
 
 
@@ -213,52 +189,27 @@ class Cliente:
         self.origem_sala = room_name
 
          
-        
 
-# class Mensagem:
-#     def __init__(self, tipo, username, destinatario, conteudo, timestamp):
-#         self.tipo = tipo
-#         self.origem = username
-#         self.destinatario = destinatario
-#         self.conteudo = conteudo
-#         self.timestamp = timestamp
-
-    
-    
-    
-
-
-
-
-
-
-#def list_users(room_name):
-
-# def room_inicializer(room_name):
-#     pass  
 
 if __name__ == "__main__":
     cliente = Cliente("test")
     manager = Sala_gerente()
     sala_modelo = Sala_de_chat("teste")
     
-    # rpc_server = SimpleXMLRPCServer(('localhost', 8000))
-    rpc_server = xmlrpc.server.SimpleXMLRPCServer(('localhost', port))
-    #rpc_server.register_introspection_functions()
- #   rpc_server.register_function(sala_modelo.adicionar_mensagem,"adiciona_mensagem") #Pra poder registrar o método de "Sala_de_chat"
+    rpc_server = xmlrpc.server.SimpleXMLRPCServer(('localhost', port), allow_none=True)
     rpc_server.register_function(sala_modelo.sair_sala,"sair_sala")
     rpc_server.register_function(cliente.receber_mensagem_privada,"receber_mensagem_privada")
-#    rpc_server.register_function(sala_modelo.get_last_fifty,"ultimos_cinquenta")
+
     rpc_server.register_instance(Sala_gerente())
-    # rpc_server.register_instance(Sala_de_chat())
+
     print("Chat server running on port 8000...")
     rpc_client = xmlrpc.client.ServerProxy('http://localhost:5000')
-    # rpc_client.register_procedure('adicionar mensagem','localhost',port)
+
     rpc_client.register_procedure('Entrar na sala','localhost',port)
     rpc_client.register_procedure('Sair da sala','localhost',port)
     rpc_client.register_procedure('Enviar mensagem','localhost',port)
     rpc_client.register_procedure('Listar usuários','localhost',port)
-    #rpc_client.register_procedure('Receber mensagens','localhost',port)
+
     rpc_client.register_procedure('Listar salas','localhost',port)
     rpc_client.register_procedure('Criar sala','localhost',port)
     rpc_client.register_procedure('Deletar sala','localhost',port)
